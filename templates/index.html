@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Aprende sobre criptomonedas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url("/static/fondo-cripto.jpg") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      color: #222;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px -2px rgba(0,0,0,0.4); /* sombra solo abajo */
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    p.intro {
+      font-size: 1.1em;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #2980b9;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3498db;
+    }
+    .result {
+      margin-top: 20px;
+      /* quitamos white-space aquí */
+    }
+    .crypto-data {
+      margin-top: 20px;
+      padding: 15px;
+      border-left: 4px solid #27ae60;
+      background: #ecf9f1;
+      white-space: pre-line; /* aquí sí respeta saltos */
+    }
+    canvas {
+      margin-top: 20px;
+      width: 100%;
+      height: 300px;
+    }
+    #logoCripto {
+      max-width: 120px;
+      display: none; /* solo aparece si hay logo */
+      margin-bottom: 15px;
+    }
+  </style>
+  <!-- 📌 librería para renderizar Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Asistente sobre criptomonedas</h1>
+
+    <p class="intro">
+      Conoce los detalles sobre todas las criptomonedas que hay en el mercado. Antes de entrar en el ecosistema cripto, es de vital importancia saber qué hay detrás de cada proyecto, el nivel de descentralización de cada cripto, su organización si la hay, sus creadores, su arquitectura o su historia.
+    </p>
+    <p class="intro">
+      Además de toda esta información, esta web facilita el precio en tiempo real y otros datos financieros, obtenidos a través de la plataforma <strong>CoinGecko</strong>.
+    </p>
+    <p class="intro">
+      Pero este proyecto no se queda aquí. También queremos explicarte cualquier concepto cripto con el que tengas dudas. ¿Qué es el <em>staking</em> o la minería cripto? ¿Qué es un <em>exchange descentralizado</em>? ¿Qué peligros tiene un proyecto cripto?
+    </p>
+    <p class="intro">
+      Aprende todo lo relativo al mundo cripto a través de nuestra plataforma, pregunta todo lo que quieras y aprovecha los datos en tiempo real que te ofrecemos.
+    </p>
+
+    <textarea id="pregunta" placeholder="Escribe tu pregunta aquí..."></textarea>
+    <button onclick="enviarPregunta()">Enviar</button>
+
+    <div id="resultado">
+      <img id="logoCripto" alt="Logo de la criptomoneda">
+      <div id="respuesta"></div> <!-- 📌 usamos div para Markdown -->
+    </div>
+
+    <div class="crypto-data" id="mercado"></div>
+    <canvas id="grafico"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let chartInstance = null; // para resetear el gráfico antes de dibujar otro
+
+    async function enviarPregunta() {
+      const pregunta = document.getElementById("pregunta").value;
+      const res = await fetch("/qa", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({pregunta})
+      });
+      const data = await res.json();
+
+      // 📌 Renderizar la respuesta como Markdown (con saltos y formato)
+      document.getElementById("respuesta").innerHTML = marked.parse(data.respuesta || "");
+
+      // 📌 Mostrar logo si existe
+      const logo = document.getElementById("logoCripto");
+      if (data.mercado && data.mercado.logo) {
+        logo.src = data.mercado.logo;
+        logo.style.display = "block";
+      } else {
+        logo.style.display = "none";
+      }
+
+      // 📌 Mostrar datos de mercado
+     if (data.mercado) {
+      const m = data.mercado;
+      document.getElementById("mercado").innerText =
+    `Precio USD: ${Number(m.precio_usd).toLocaleString("en-US")} $\n` +
+    `MarketCap: ${Number(m.marketcap_usd).toLocaleString("en-US")}\n` +
+    `Circulación: ${Number(m.circulating_supply).toLocaleString("en-US")}\n` +
+    `Max Supply: ${Number(m.max_supply).toLocaleString("en-US")}`;
+}
+
+      // 📌 Dibujar gráfico real si hay datos
+      if (data.grafico && data.grafico.fechas && data.grafico.precios) {
+        const ctx = document.getElementById("grafico").getContext("2d");
+
+        if (chartInstance) chartInstance.destroy(); // resetear gráfico
+
+        const labels = data.grafico.fechas.map(ts => {
+          const d = new Date(ts);
+          return `${d.getDate()}/${d.getMonth()+1}`;
+        });
+
+        chartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Precio en los últimos 30 días (dólares)",
+              data: data.grafico.precios,
+              borderColor: "#2980b9",
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: false } }
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Entorno virtual
+.venv/
+__pycache__/
+*.pyc
+
+# Configuración sensible
+.env
+
+# Archivos temporales / logs
+*.log
+*.pid
+
+# Jupyter basura
+*.ipynb
+*.ipynb_checkpoints
+
+# Sistema
+.DS_Store
+Thumbs.db
