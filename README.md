@@ -36,7 +36,7 @@ Aprende todo lo relativo al mundo cripto a través de nuestra plataforma, pregun
    cd cripto-app
 Crear archivo .env en la raíz (con tus credenciales):
 
-env
+```env
 Copiar código
 GROQ_API_KEY=tu_api_key
 DB_HOST=tu_host
@@ -46,17 +46,17 @@ DB_PASS=tu_password
 DB_PORT=5432
 Construir la imagen en Docker:
 
-bash
+```bash
 Copiar código
 docker build -t cripto-app:latest .
 Ejecutar el contenedor:
 
-bash
+```bash
 Copiar código
 docker run -p 8000:8000 --env-file .env cripto-app:latest
 Abrir en el navegador:
 
-arduino
+```arduino
 Copiar código
 http://localhost:8000
 🐳 DockerHub
